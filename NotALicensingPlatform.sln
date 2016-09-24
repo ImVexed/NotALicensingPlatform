@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotALicensingPlatform", "NotALicensingPlatform\NotALicensingPlatform.csproj", "{FA438BE8-47ED-4FD9-8BDE-FAB0BD7593C6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaLP - Login", "NaLP - Login\NaLP - Login.csproj", "{8C1F7583-9193-4192-B0A3-1C0386463019}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaLP - Server", "NaLP - Server\NaLP - Server.csproj", "{892F7B09-D0BE-4000-8B4C-9B3988E6C85E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FA438BE8-47ED-4FD9-8BDE-FAB0BD7593C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA438BE8-47ED-4FD9-8BDE-FAB0BD7593C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA438BE8-47ED-4FD9-8BDE-FAB0BD7593C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA438BE8-47ED-4FD9-8BDE-FAB0BD7593C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C1F7583-9193-4192-B0A3-1C0386463019}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C1F7583-9193-4192-B0A3-1C0386463019}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C1F7583-9193-4192-B0A3-1C0386463019}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C1F7583-9193-4192-B0A3-1C0386463019}.Release|Any CPU.Build.0 = Release|Any CPU
+		{892F7B09-D0BE-4000-8B4C-9B3988E6C85E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{892F7B09-D0BE-4000-8B4C-9B3988E6C85E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{892F7B09-D0BE-4000-8B4C-9B3988E6C85E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{892F7B09-D0BE-4000-8B4C-9B3988E6C85E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
