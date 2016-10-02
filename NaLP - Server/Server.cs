@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography;
-using System.Text;
 using static NaLP___Server.Encryption;
 
 namespace NaLP___Server
@@ -21,9 +22,10 @@ namespace NaLP___Server
     public class Server
     {
         private RNGCryptoServiceProvider cRandom = new RNGCryptoServiceProvider(DateTime.Now.ToString());
-        private List<SharedClass> Clients = new List<SharedClass>();
+        public List<sClient> Clients = new List<sClient>();
         private List<KeyValuePair<string, MethodInfo>> RemotingMethods = new List<KeyValuePair<string, MethodInfo>>();
         private Socket sSocket = null;
+        private Action<string, Color> aLog = null;
 
         #region Variables
 
@@ -59,14 +61,12 @@ namespace NaLP___Server
         /// <summary>
         /// Start server and begin listening for connections.
         /// </summary>
-        public void Start()
+        public void Start(Action<string, Color> aLog)
         {
+            this.aLog = aLog;
+
             sSocket.Bind(new IPEndPoint(IPAddress.Any, iPort));
             sSocket.Listen(iBacklog);
-
-            Log("Server started!", ConsoleColor.Green);
-
-            sSocket.BeginAccept(AcceptCallback, null);
 
             foreach (MethodInfo mI in typeof(SharedClass).GetMethods())
             {
@@ -79,10 +79,12 @@ namespace NaLP___Server
                     if (RemotingMethods.Where(x => x.Key == thisAttr.Identifier).Any())
                         throw new Exception("There are more than one function inside the SharedClass with the same Identifier!");
 
-                    Log(String.Format("Identifier {0} MethodInfo link created...", thisAttr.Identifier), ConsoleColor.Green);
+                    Log(String.Format("Identifier {0} MethodInfo link created...", thisAttr.Identifier), Color.Green);
                     RemotingMethods.Add(new KeyValuePair<string, MethodInfo>(thisAttr.Identifier, mI));
                 }
             }
+
+            sSocket.BeginAccept(AcceptCallback, null);
         }
 
         /// <summary>
@@ -92,60 +94,68 @@ namespace NaLP___Server
         {
             if (sSocket == null)
                 throw new Exception("Server is not running...");
-            sSocket.Shutdown(SocketShutdown.Both);
             sSocket.Close();
         }
 
         private void AcceptCallback(IAsyncResult iAR)
         //Our method for accepting clients
         {
-            Socket client = sSocket.EndAccept(iAR);
-            Log(String.Format("Client connected from IP: {0}", client.RemoteEndPoint.ToString()), ConsoleColor.Green, true);
+            Socket client = null;
+            try
+            {
+                client = sSocket.EndAccept(iAR);
+            }
+            catch { }
 
+            if (Array.Exists(File.ReadAllLines("BannedIPs.txt"), x => x == client.RemoteEndPoint.ToString().Split(':')[0]))
+            {
+                client.Close();
+                sSocket.BeginAccept(AcceptCallback, null);
+                return;
+            }
+            Log(String.Format("Client connected from IP: {0}", client.RemoteEndPoint.ToString()), Color.Green, true);
+            int iSIndex = Clients.Count;
             sClient sC = new sClient();
             sC.cSocket = client;
-            sC.iIndex = Clients.Count();
-
-            Clients.Add(new SharedClass());
-
+            sC.sCls = new SharedClass(client.RemoteEndPoint.ToString());
             sC.eCls = null;
             sC.bSize = new byte[4];
-
             BeginEncrypting(ref sC);
-
-            sC.cSocket.BeginReceive(sC.bSize, 0, sC.bSize.Length, SocketFlags.None, RetrieveCallback, sC);
-
+            Clients.Add(sC);
+            sC.cSocket.BeginReceive(sC.bSize, 0, sC.bSize.Length, SocketFlags.None, RetrieveCallback, iSIndex);
             sSocket.BeginAccept(AcceptCallback, null);
         }
 
         private void RetrieveCallback(IAsyncResult iAR)
         // Handshake + Encryption is handled outside of this callback, so any message that makes it here is expected to be a method call/move.
         {
-            sClient sC = (sClient)iAR.AsyncState;
+            int iSC = (int)iAR.AsyncState;
+
             try
             {
                 SocketError sE;
-                if (sC.cSocket.EndReceive(iAR, out sE) == 0 || sE != SocketError.Success)
+
+                if (Clients[iSC].cSocket.EndReceive(iAR, out sE) == 0 || sE != SocketError.Success)
                 {
-                    Log(String.Format("Client IP: {0} has disconnected...", sC.cSocket.RemoteEndPoint.ToString()), ConsoleColor.Yellow, true);
-                    sC.cSocket.Close();
-                    Clients[sC.iIndex].Dispose();
-                    Clients.RemoveAt(sC.iIndex);
-                    // GC.Collect(0); For immediate disposal
+                    Log(String.Format("Client IP: {0} has disconnected...", Clients[iSC].cSocket.RemoteEndPoint.ToString()), Color.Orange, true);
+
+                    Clients[iSC].cSocket.Close();
+                    Clients[iSC].sCls.Dispose();
+                    Clients.RemoveAt(iSC);
+                    //GC.Collect(0); //For immediate disposal
                     return;
                 }
+                byte[] cBuffer = new byte[BitConverter.ToInt32(Clients[iSC].bSize, 0)];
 
-                byte[] cBuffer = new byte[BitConverter.ToInt32(sC.bSize, 0)];
-                sC.bSize = new byte[4];
+                Clients[iSC].bSize = new byte[4];
+                Clients[iSC].cSocket.Receive(cBuffer);
 
-                sC.cSocket.Receive(cBuffer);
-
-                Log(String.Format("Receiving {0} bytes...", cBuffer.Length), ConsoleColor.Cyan);
+                Log(String.Format("Receiving {0} bytes...", cBuffer.Length), Color.Cyan);
 
                 if (cBuffer.Length <= 0)
                     throw new Exception("Received null buffer from client!");
 
-                cBuffer = sC.eCls.AES_Decrypt(cBuffer);
+                cBuffer = Clients[iSC].eCls.AES_Decrypt(cBuffer);
 
                 object[] oMsg = BinaryFormatterSerializer.Deserialize(cBuffer);
 
@@ -153,32 +163,47 @@ namespace NaLP___Server
                     throw new Exception("Ahhh it's not a call or move, everyone run!");
 
                 object[] oRet = new object[2];
+
                 oRet[0] = Headers.HEADER_RETURN;
 
                 MethodInfo[] mIA = typeof(SharedClass).GetMethods();
-
                 MethodInfo mI = RemotingMethods.Find(x => x.Key == oMsg[1] as string).Value;
 
                 if (mI == null)
                     throw new Exception("Client called method that does not exist in Shared Class! (Did you remember the [NLCCall] Attribute?)");
 
-                oRet[1] = mI.Invoke(Clients[sC.iIndex], oMsg.Skip(2).Take(oMsg.Length - 2).ToArray());
+                oRet[1] = mI.Invoke(Clients[iSC].sCls, oMsg.Skip(2).Take(oMsg.Length - 2).ToArray());
 
-                Log(String.Format("Client IP: {0} called Remote Identifier: {1}", sC.cSocket.RemoteEndPoint.ToString(), oMsg[1] as string), ConsoleColor.Cyan);
+                Log(String.Format("Client IP: {0} called Remote Identifier: {1}", Clients[iSC].cSocket.RemoteEndPoint.ToString(), oMsg[1] as string), Color.Cyan);
 
                 if (oRet[1] == null && oMsg[0].Equals(Headers.HEADER_MOVE))
                     Console.WriteLine("Method {0} returned null! Possible mismatch?", oMsg[1] as string);
 
-                BlockingSend(sC, oRet);
-                sC.cSocket.BeginReceive(sC.bSize, 0, sC.bSize.Length, SocketFlags.None, RetrieveCallback, sC);
+                BlockingSend(Clients[iSC], oRet);
+                Clients[iSC].cSocket.BeginReceive(Clients[iSC].bSize, 0, Clients[iSC].bSize.Length, SocketFlags.None, RetrieveCallback, iSC);
             }
-            catch (Exception ex)
+            catch
             {
-                Log(String.Format("Client IP: {0} has caused an exception...", sC.cSocket.RemoteEndPoint.ToString()), ConsoleColor.Yellow, true);
-                Log(ex.Message + Environment.NewLine + ex.StackTrace, ConsoleColor.Red);
-                sC.cSocket.Close();
-                Clients[sC.iIndex].Dispose();
-                Clients.RemoveAt(sC.iIndex);
+                try
+                {
+                    Log(String.Format("Client IP: {0} has caused an exception...", Clients[iSC].cSocket.RemoteEndPoint.ToString()), Color.Orange, true);
+                }
+                catch { };
+                try
+                {
+                    Clients[iSC].cSocket.Close();
+                }
+                catch { };
+                try
+                {
+                    Clients[iSC].sCls.Dispose();
+                }
+                catch { };
+                try
+                {
+                    Clients.RemoveAt(iSC);
+                }
+                catch { };
             }
         }
 
@@ -212,7 +237,7 @@ namespace NaLP___Server
             else
                 bSend = Compress(bSend);
 
-            Log(String.Format("Sending {0} bytes...", bSend.Length), ConsoleColor.Cyan);
+            Log(String.Format("Sending {0} bytes...", bSend.Length), Color.Cyan);
 
             sC.cSocket.Send(BitConverter.GetBytes(bSend.Length));
             sC.cSocket.Send(bSend);
@@ -231,7 +256,7 @@ namespace NaLP___Server
                 iReceived += sC.cSocket.Receive(sBuf, iReceived, sBuf.Length - iReceived, SocketFlags.None);
             }
 
-            Log(String.Format("Receiving {0} bytes...", sBuf.Length), ConsoleColor.Cyan);
+            Log(String.Format("Receiving {0} bytes...", sBuf.Length), Color.Cyan);
 
             if (sC.eCls != null)
                 sBuf = sC.eCls.AES_Decrypt(sBuf);
@@ -241,16 +266,12 @@ namespace NaLP___Server
             return BinaryFormatterSerializer.Deserialize(sBuf);
         }
 
-        private void Log(string message, ConsoleColor color = ConsoleColor.Gray, bool force = false)
+        private void Log(string message, Color color, bool force = false)
         {
             if (!bDebugLog && !force)
                 return;
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write("[{0}] ", DateTime.Now.ToLongTimeString());
-            Console.ForegroundColor = color;
-            Console.Write("{0}{1}", message, Environment.NewLine);
-            Console.ResetColor();
+            aLog(message, color);
         }
     }
 
@@ -268,7 +289,7 @@ namespace NaLP___Server
     public class sClient
     {
         public Socket cSocket;
-        public int iIndex;
+        public SharedClass sCls;
         public Encryption eCls;
         public byte[] bSize;
     }

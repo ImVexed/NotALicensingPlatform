@@ -10,6 +10,8 @@ namespace NaLP___Server
 {
     public class Encryption
     {
+        public static int iCompressionLevel = 1;
+
         private RNGCryptoServiceProvider cRandom = new RNGCryptoServiceProvider(DateTime.Now.ToString());
 
         private AesCryptoServiceProvider AES = new AesCryptoServiceProvider();
@@ -80,7 +82,7 @@ namespace NaLP___Server
 
         public static byte[] Compress(byte[] input)
         {
-            return uQLZ.compress(input, 0, input.Length, 3);
+            return uQLZ.compress(input, 0, input.Length, iCompressionLevel);
         }
 
         public static byte[] Decompress(byte[] input)

@@ -19,7 +19,7 @@ namespace NotALicensingPlatform
             var vSC = vAsm.GetType(vEP.DeclaringType.FullName).GetMethod("SetClient");
             var vInst = vAsm.CreateInstance(vEP.Name);
             vSC.Invoke(vInst, new object[] { client }); // Pass our client to the Login GUI first
-            vEP.Invoke(vInst, null); // Now properly invoke and draw GUI
+            vEP.Invoke(vInst, null);                    // Now properly invoke and draw GUI
 
             Process.GetCurrentProcess().WaitForExit();
         }

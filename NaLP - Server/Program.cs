@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace NaLP___Server
 {
     internal class Program
     {
-        private static Server server = new Server();
 
-        private static void Main(string[] args)
+        [STAThread]
+        public static void Main()
         {
-            Console.Title = "NaLP Server";
-            server.bDebugLog = true;
-            server.Start();
-
-            Process.GetCurrentProcess().WaitForExit();
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new frmMain());
         }
     }
 }
