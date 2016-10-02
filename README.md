@@ -21,4 +21,5 @@ Just a liteweight licensing system using [NotLiteCode](https://github.com/Iceman
 ## Notes:
  - If you want to hide the console of (NotALicensingPlatform), simple go into project settings and change the Output Type to Windows Application instead of Console Application.
  - NotALicensingPlatform and NaLP - Login NEED to be the same .NET Version, or any Assembly you're attempting to load for that matter.
+ - I tried to leave everything fairly basic here, my goal wasn't to go the whole 9 yards, as everyone has a different implementation, thats why the client system is basic XML, as it'll be easy to re-implement whatever method you preffer, this same thinking was applied to the Keys (which most likely will be automatically generated), BannedIPs, BannedHWIDs, and other things of this nature.
  
