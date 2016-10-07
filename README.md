@@ -1,3 +1,4 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/31q74xkd82akxkf4?svg=true)](https://ci.appveyor.com/project/Icemantheditor/notalicensingplatform)
 # Not a Licensing Platform (spoiler alert: it actually is)
 Just a liteweight licensing system using [NotLiteCode](https://github.com/Icemantheditor/NotLiteCode)
 
