@@ -101,7 +101,7 @@ namespace NotALicensingPlatform
 
             Log(String.Format("Handshake complete, key length: {0}", bKeyTemp.Length), ConsoleColor.Green);
 
-            eCls = new Encryption(bKeyTemp);
+            eCls = new Encryption(bKeyTemp, HASH_STRENGTH.MEDIUM);
         }
 
         public T RemoteCall<T>(string identifier, params object[] param)

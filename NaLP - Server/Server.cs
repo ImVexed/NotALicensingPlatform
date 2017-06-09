@@ -166,7 +166,6 @@ namespace NaLP___Server
 
                 oRet[0] = Headers.HEADER_RETURN;
 
-                MethodInfo[] mIA = typeof(SharedClass).GetMethods();
                 MethodInfo mI = RemotingMethods.Find(x => x.Key == oMsg[1] as string).Value;
 
                 if (mI == null)
@@ -226,7 +225,7 @@ namespace NaLP___Server
             using (CngKey cPubKey = CngKey.Import(cBuf, CngKeyBlobFormat.EccPublicBlob))
                 sSymKey = sAlgo.DeriveKeyMaterial(cPubKey);
 
-            sC.eCls = new Encryption(sSymKey);
+            sC.eCls = new Encryption(sSymKey, HASH_STRENGTH.MEDIUM);
         }
 
         private void BlockingSend(sClient sC, params object[] param)
@@ -261,7 +260,7 @@ namespace NaLP___Server
             if (sC.eCls != null)
                 sBuf = sC.eCls.AES_Decrypt(sBuf);
             else
-                sBuf = Encryption.Decompress(sBuf);
+                sBuf = Decompress(sBuf);
 
             return BinaryFormatterSerializer.Deserialize(sBuf);
         }
