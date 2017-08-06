@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
@@ -10,6 +11,7 @@ namespace NaLP___Server
 {
     public class SharedClass : IDisposable
     {
+       
         public bool isLoggedIn = false;
         public int iRowIndex = 0;
         public bool isExpired = true;
@@ -22,6 +24,11 @@ namespace NaLP___Server
             return File.ReadAllBytes("NaLP - Login.exe");
         }
 
+        [NLCCall("GetBase")]
+        public byte[] GetKey()
+        {
+
+        }
         [NLCCall("Login")]
         public int Login(string username, string password, byte[] hwid)
         {
@@ -72,7 +79,7 @@ namespace NaLP___Server
         }
 
         [NLCCall("Register")]
-        public int Register(string username, string password, byte[] hwid, string key) // Require a key on activation to prevent spam
+        public int Register(string username, byte[] password, byte[] publicKey, byte[] hwid, string key) // Require a key on activation to prevent spam
         {
             try
             {
@@ -94,7 +101,7 @@ namespace NaLP___Server
                 client.bHWID = hwid;
                 client.lHistory = new List<clsUsedKey>();
                 client.lHistory.Add(thisUsedKey);
-                client.bPassword = SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(password));
+                client.bPassword = SHA256.Create().ComputeHash(password);
 
                 isLoggedIn = true;
                 isExpired = false;
@@ -153,16 +160,16 @@ namespace NaLP___Server
 
         public void UpdateInfo()
         {
-            frmMain.frmStatic.PerformSafely(() => frmMain.frmStatic.dgvConnections.Rows.SharedRow(iRowIndex).Cells[0].Value = thisClient.sUsername);
-            if (thisKey == default(clsUsedKey))
-                frmMain.frmStatic.PerformSafely(() => frmMain.frmStatic.dgvConnections.Rows.SharedRow(iRowIndex).Cells[2].Value = 0);
-            else
-                frmMain.frmStatic.PerformSafely(() => frmMain.frmStatic.dgvConnections.Rows.SharedRow(iRowIndex).Cells[2].Value = ((int)thisKey.dtActivation.Add(new TimeSpan(thisKey.iValidFor, 0, 0, 0)).Subtract(DateTime.Now).TotalDays).ToString());
+            //frmMain.frmStatic.PerformSafely(() => frmMain.frmStatic.dgvConnections.Rows.SharedRow(iRowIndex).Cells[0].Value = thisClient.sUsername);
+            //if (thisKey == default(clsUsedKey))
+            //    frmMain.frmStatic.PerformSafely(() => frmMain.frmStatic.dgvConnections.Rows.SharedRow(iRowIndex).Cells[2].Value = 0);
+            //else
+            //    frmMain.frmStatic.PerformSafely(() => frmMain.frmStatic.dgvConnections.Rows.SharedRow(iRowIndex).Cells[2].Value = ((int)thisKey.dtActivation.Add(new TimeSpan(thisKey.iValidFor, 0, 0, 0)).Subtract(DateTime.Now).TotalDays).ToString());
         }
 
-        public SharedClass(string IP)
+        public SharedClass(EndPoint cEP)
         {
-            iRowIndex = frmMain.frmStatic.PerformSafely(() => frmMain.frmStatic.dgvConnections.Rows.Add(string.Empty, IP, string.Empty));
+            iRowIndex = frmMain.frmStatic.PerformSafely(() => frmMain.frmStatic.dgvConnections.Rows.Add(string.Empty, cEP, string.Empty));
         }
 
         public void Dispose()

@@ -18,6 +18,8 @@ namespace NotALicensingPlatform
     {
         public static int iCompressionLevel = 1;
 
+        public static RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(1024);
+
         private RNGCryptoServiceProvider cRandom = new RNGCryptoServiceProvider();
 
         private AesCryptoServiceProvider AES = new AesCryptoServiceProvider();

@@ -18,17 +18,22 @@ namespace NaLP___Server
     {
         public static int iCompressionLevel = 1;
 
+        public static RSACryptoServiceProvider rsa;
+
         private RNGCryptoServiceProvider cRandom = new RNGCryptoServiceProvider();
 
         private AesCryptoServiceProvider AES = new AesCryptoServiceProvider();
 
-        private byte[] bKey;
-
+        private byte[] puKey;
+        private byte[] prKey;
         private HASH_STRENGTH strength;
 
-        public Encryption(byte[] key, HASH_STRENGTH strength)
+        public Encryption(string keyContainerName, byte[] key, HASH_STRENGTH strength)
         {
-            bKey = key;
+            var csp = new CspParameters();
+            csp.Flags = CspProviderFlags.UseMachineKeyStore | CspProviderFlags.UseUserProtectedKey | CspProviderFlags.UseNonExportableKey;
+            csp.KeyContainerName = keyContainerName;
+           
             AES.KeySize = 256;
             AES.BlockSize = 128;
             AES.Mode = CipherMode.CBC;
@@ -40,22 +45,16 @@ namespace NaLP___Server
         {
             byte[] bOut;
             byte[] bIV = new byte[16];
-
             cRandom.GetBytes(bIV);
-
-            var key = new Rfc2898DeriveBytes(bKey, bIV, (int)strength);
-            byte[] bHKey = key.GetBytes(AES.KeySize / 8);
-            byte[] bHIV = key.Salt;
-
             AES.Key = bHKey;
-            AES.IV = bHIV;
+            AES.IV = bIV;
 
             using (var iCT = AES.CreateEncryptor())
                 bOut = iCT.TransformFinalBlock(bytesToBeEncrypted, 0, bytesToBeEncrypted.Length);
 
             byte[] bFinal = new byte[bOut.Length + 32 + 16];
 
-            Array.Copy(bHIV, 0, bFinal, 0, 16);
+            Array.Copy(bIV, 0, bFinal, 0, 16);
 
             using (var hmac = new HMACSHA256(bHKey))
                 Array.Copy(hmac.ComputeHash(bOut), 0, bFinal, 16, 32);
@@ -78,10 +77,9 @@ namespace NaLP___Server
 
             var key = new Rfc2898DeriveBytes(bKey, bIV, (int)strength);
             byte[] bHKey = key.GetBytes(AES.KeySize / 8);
-            byte[] bHIV = key.Salt;
 
             AES.Key = bHKey;
-            AES.IV = bHIV;
+            AES.IV = bIV;
 
             using (var hmac = new HMACSHA256(bHKey))
                 if (!hmac.ComputeHash(bPayload).SequenceEqual(bHash))

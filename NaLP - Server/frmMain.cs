@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
@@ -85,28 +86,27 @@ namespace NaLP___Server
 
         private void itemKick_Click(object sender, EventArgs e)
         {
-            int index = server.Clients.FindIndex(x => x.cSocket.RemoteEndPoint.ToString() == dgvConnections.SelectedCells[0].OwningRow.Cells[1].Value as string);
+            var cEP = (EndPoint)dgvConnections.SelectedCells[0].OwningRow.Cells[1].Value;
 
-            server.Clients[index].sCls.Dispose();
-            server.Clients[index].cSocket.Close();
-            server.Clients.RemoveAt(index);
+            server.Clients[cEP].sCls.Dispose();
+            server.Clients[cEP].cSocket.Close();
+            server.Clients.Remove(cEP);
         }
 
         private void itemBan_Click(object sender, EventArgs e)
         {
-            int index = server.Clients.FindIndex(x => x.cSocket.RemoteEndPoint.ToString() == dgvConnections.SelectedCells[0].OwningRow.Cells[1].Value as string);
-
+            var cEP = (EndPoint)dgvConnections.SelectedCells[0].OwningRow.Cells[1].Value;
             File.AppendAllText("BannedIPs.txt", (dgvConnections.SelectedCells[0].OwningRow.Cells[1].Value as string).Split(':')[0] + Environment.NewLine);
 
-            if (server.Clients[index].sCls.isLoggedIn)
+            if (server.Clients[cEP].sCls.isLoggedIn)
             {
-                File.AppendAllText("BannedHWIDs.txt", Encoding.UTF8.GetString(server.Clients[index].sCls.thisClient.bHWID) + Environment.NewLine);
-                File.Delete(string.Format("Clients\\{0}.xml", server.Clients[index].sCls.thisClient.sUsername));
+                File.AppendAllText("BannedHWIDs.txt", Encoding.UTF8.GetString(server.Clients[cEP].sCls.thisClient.bHWID) + Environment.NewLine);
+                File.Delete(string.Format("Clients\\{0}.xml", server.Clients[cEP].sCls.thisClient.sUsername));
             }
 
-            server.Clients[index].sCls.Dispose();
-            server.Clients[index].cSocket.Close();
-            server.Clients.RemoveAt(index);
+            server.Clients[cEP].sCls.Dispose();
+            server.Clients[cEP].cSocket.Close();
+            server.Clients.Remove(cEP);
         }
     }
 

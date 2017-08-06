@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Threading;
 using static NaLP___Server.Encryption;
 
 namespace NaLP___Server
@@ -21,9 +22,11 @@ namespace NaLP___Server
 
     public class Server
     {
-        private RNGCryptoServiceProvider cRandom = new RNGCryptoServiceProvider(DateTime.Now.ToString());
-        public List<sClient> Clients = new List<sClient>();
-        private List<KeyValuePair<string, MethodInfo>> RemotingMethods = new List<KeyValuePair<string, MethodInfo>>();
+        private RNGCryptoServiceProvider cRandom = new RNGCryptoServiceProvider();
+        public Dictionary<EndPoint, sClient> Clients = new Dictionary<EndPoint, sClient>();
+        private SemaphoreSlim ssLimiter = new SemaphoreSlim(10);
+        private CancellationTokenSource tkCancel = new CancellationTokenSource();
+        private Dictionary<string, MethodInfo> RemotingMethods = new Dictionary<string, MethodInfo>();
         private Socket sSocket = null;
         private Action<string, Color> aLog = null;
 
@@ -72,18 +75,20 @@ namespace NaLP___Server
             {
                 object[] oAttr = mI.GetCustomAttributes(typeof(NLCCall), false);
 
-                if (oAttr.Any())
+                if (oAttr.Length > 0)
                 {
                     NLCCall thisAttr = oAttr[0] as NLCCall;
 
-                    if (RemotingMethods.Where(x => x.Key == thisAttr.Identifier).Any())
+                    if (RemotingMethods.TryGetValue(thisAttr.Identifier, out Out<MethodInfo>.NULL) == true)
                         throw new Exception("There are more than one function inside the SharedClass with the same Identifier!");
 
                     Log(String.Format("Identifier {0} MethodInfo link created...", thisAttr.Identifier), Color.Green);
-                    RemotingMethods.Add(new KeyValuePair<string, MethodInfo>(thisAttr.Identifier, mI));
+                    RemotingMethods.Add(thisAttr.Identifier, mI);
                 }
             }
 
+            if (RemotingMethods.Count() == 0)
+                throw new Exception("No remote methods found inside the SharedClass");
             sSocket.BeginAccept(AcceptCallback, null);
         }
 
@@ -92,6 +97,7 @@ namespace NaLP___Server
         /// </summary>
         public void Stop()
         {
+            tkCancel.Cancel();
             if (sSocket == null)
                 throw new Exception("Server is not running...");
             sSocket.Close();
@@ -114,48 +120,59 @@ namespace NaLP___Server
                 return;
             }
             Log(String.Format("Client connected from IP: {0}", client.RemoteEndPoint.ToString()), Color.Green, true);
-            int iSIndex = Clients.Count;
             sClient sC = new sClient();
             sC.cSocket = client;
-            sC.sCls = new SharedClass(client.RemoteEndPoint.ToString());
+            sC.sCls = new SharedClass(client.RemoteEndPoint);
             sC.eCls = null;
             sC.bSize = new byte[4];
             BeginEncrypting(ref sC);
-            Clients.Add(sC);
-            sC.cSocket.BeginReceive(sC.bSize, 0, sC.bSize.Length, SocketFlags.None, RetrieveCallback, iSIndex);
+            Clients.Add(client.RemoteEndPoint, sC);
+            Clients[client.RemoteEndPoint].cSocket.BeginReceive(sC.bSize, 0, sC.bSize.Length, SocketFlags.None, RetrieveCallback, client.RemoteEndPoint);
             sSocket.BeginAccept(AcceptCallback, null);
         }
 
         private void RetrieveCallback(IAsyncResult iAR)
         // Handshake + Encryption is handled outside of this callback, so any message that makes it here is expected to be a method call/move.
         {
-            int iSC = (int)iAR.AsyncState;
+            EndPoint cEP;
+            if (!ssLimiter.Wait(10 * 1000, tkCancel.Token))
+            {
+                if (tkCancel.Token.IsCancellationRequested)
+                    return;
+                else
+                {
+                    Log("Semaphore wait time has exceeded 10 seconds! Aborting!", Color.Red, true);
+                    cEP = (EndPoint)iAR.AsyncState;
+                    Clients[cEP].cSocket.BeginReceive(Clients[cEP].bSize, 0, Clients[cEP].bSize.Length, SocketFlags.None, RetrieveCallback, cEP);
+                    return;
+                }
+            }
+            cEP = (EndPoint)iAR.AsyncState;
 
             try
             {
                 SocketError sE;
-
-                if (Clients[iSC].cSocket.EndReceive(iAR, out sE) == 0 || sE != SocketError.Success)
+                if (Clients[cEP].cSocket.EndReceive(iAR, out sE) == 0 || sE != SocketError.Success)
                 {
-                    Log(String.Format("Client IP: {0} has disconnected...", Clients[iSC].cSocket.RemoteEndPoint.ToString()), Color.Orange, true);
+                    Log(String.Format("Client IP: {0} has disconnected...", Clients[cEP].cSocket.RemoteEndPoint.ToString()), Color.Orange, true);
 
-                    Clients[iSC].cSocket.Close();
-                    Clients[iSC].sCls.Dispose();
-                    Clients.RemoveAt(iSC);
+                    Clients[cEP].cSocket.Close();
+                    Clients[cEP].sCls.Dispose();
+                    Clients.Remove(cEP);
                     //GC.Collect(0); //For immediate disposal
                     return;
                 }
-                byte[] cBuffer = new byte[BitConverter.ToInt32(Clients[iSC].bSize, 0)];
+                byte[] cBuffer = new byte[BitConverter.ToInt32(Clients[cEP].bSize, 0)];
 
-                Clients[iSC].bSize = new byte[4];
-                Clients[iSC].cSocket.Receive(cBuffer);
+                Clients[cEP].bSize = new byte[4];
+                Clients[cEP].cSocket.Receive(cBuffer);
 
                 Log(String.Format("Receiving {0} bytes...", cBuffer.Length), Color.Cyan);
 
                 if (cBuffer.Length <= 0)
                     throw new Exception("Received null buffer from client!");
 
-                cBuffer = Clients[iSC].eCls.AES_Decrypt(cBuffer);
+                cBuffer = Clients[cEP].eCls.AES_Decrypt(cBuffer);
 
                 object[] oMsg = BinaryFormatterSerializer.Deserialize(cBuffer);
 
@@ -166,44 +183,45 @@ namespace NaLP___Server
 
                 oRet[0] = Headers.HEADER_RETURN;
 
-                MethodInfo mI = RemotingMethods.Find(x => x.Key == oMsg[1] as string).Value;
+                MethodInfo mI;
 
-                if (mI == null)
+                if (RemotingMethods.TryGetValue(oMsg[1] as string, out mI) == false)
                     throw new Exception("Client called method that does not exist in Shared Class! (Did you remember the [NLCCall] Attribute?)");
 
-                oRet[1] = mI.Invoke(Clients[iSC].sCls, oMsg.Skip(2).Take(oMsg.Length - 2).ToArray());
+                oRet[1] = mI.Invoke(Clients[cEP].sCls, oMsg.Subset(2, oMsg.Length - 2));
 
-                Log(String.Format("Client IP: {0} called Remote Identifier: {1}", Clients[iSC].cSocket.RemoteEndPoint.ToString(), oMsg[1] as string), Color.Cyan);
+                Log(String.Format("Client IP: {0} called Remote Identifier: {1}", Clients[cEP].cSocket.RemoteEndPoint.ToString(), oMsg[1] as string), Color.Cyan);
 
                 if (oRet[1] == null && oMsg[0].Equals(Headers.HEADER_MOVE))
                     Console.WriteLine("Method {0} returned null! Possible mismatch?", oMsg[1] as string);
 
-                BlockingSend(Clients[iSC], oRet);
-                Clients[iSC].cSocket.BeginReceive(Clients[iSC].bSize, 0, Clients[iSC].bSize.Length, SocketFlags.None, RetrieveCallback, iSC);
+                BlockingSend(Clients[cEP], oRet);
+                Clients[cEP].cSocket.BeginReceive(Clients[cEP].bSize, 0, Clients[cEP].bSize.Length, SocketFlags.None, RetrieveCallback, cEP);
             }
             catch
             {
                 try
                 {
-                    Log(String.Format("Client IP: {0} has caused an exception...", Clients[iSC].cSocket.RemoteEndPoint.ToString()), Color.Orange, true);
+                    Log(String.Format("Client IP: {0} has caused an exception...", Clients[cEP].cSocket.RemoteEndPoint.ToString()), Color.Orange, true);
                 }
                 catch { };
                 try
                 {
-                    Clients[iSC].cSocket.Close();
+                    Clients[cEP].cSocket.Close();
                 }
                 catch { };
                 try
                 {
-                    Clients[iSC].sCls.Dispose();
+                    Clients[cEP].sCls.Dispose();
                 }
                 catch { };
                 try
                 {
-                    Clients.RemoveAt(iSC);
+                    Clients.Remove(cEP);
                 }
                 catch { };
             }
+            ssLimiter.Release();
         }
 
         private void BeginEncrypting(ref sClient sC)
@@ -214,10 +232,13 @@ namespace NaLP___Server
 
             BlockingSend(sC, Headers.HEADER_HANDSHAKE, sPublic);
 
-            object[] oRecv = BlockingReceive(sC);
+            object[] oRecv = BlockingReceive(sC, true);
 
             if (!oRecv[0].Equals(Headers.HEADER_HANDSHAKE))
+            {
                 sC.cSocket.Disconnect(true);
+                return;
+            }
 
             byte[] cBuf = oRecv[1] as byte[];
 
@@ -231,7 +252,7 @@ namespace NaLP___Server
         private void BlockingSend(sClient sC, params object[] param)
         {
             byte[] bSend = BinaryFormatterSerializer.Serialize(param);
-            if (sC.eCls != null)
+            if ((byte)param[0] != (byte)Headers.HEADER_HANDSHAKE) // Only allow compression if we're in handshake
                 bSend = sC.eCls.AES_Encrypt(bSend);
             else
                 bSend = Compress(bSend);
@@ -242,7 +263,7 @@ namespace NaLP___Server
             sC.cSocket.Send(bSend);
         }
 
-        private object[] BlockingReceive(sClient sC)
+        private object[] BlockingReceive(sClient sC, bool onlydecompress = false)
         {
             byte[] bSize = new byte[4];
             sC.cSocket.Receive(bSize);
@@ -257,7 +278,7 @@ namespace NaLP___Server
 
             Log(String.Format("Receiving {0} bytes...", sBuf.Length), Color.Cyan);
 
-            if (sC.eCls != null)
+            if (!onlydecompress)
                 sBuf = sC.eCls.AES_Decrypt(sBuf);
             else
                 sBuf = Decompress(sBuf);
@@ -291,5 +312,24 @@ namespace NaLP___Server
         public SharedClass sCls;
         public Encryption eCls;
         public byte[] bSize;
+    }
+
+    public static partial class LinqFaster
+    {
+        public static T[] Subset<T>(this T[] source, int start, int length)
+        {
+            if (length < 0)
+                length = 0;
+
+            var result = new T[length];
+            Array.Copy(source, start, result, 0, length);
+            return result;
+        }
+    }
+
+    public static class Out<T>
+    {
+        [ThreadStatic]
+        public static T NULL;
     }
 }

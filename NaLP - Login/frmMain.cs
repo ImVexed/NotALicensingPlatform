@@ -1,5 +1,6 @@
 ﻿using NotALicensingPlatform;
 using System;
+using System.Security.Cryptography;
 using System.Windows.Forms;
 
 namespace NaLP___Login
@@ -30,6 +31,8 @@ namespace NaLP___Login
         {
             try
             {
+              
+             
                 switch (DoLogin(txtUsername.Text, txtPassword.Text))
                 {
                     case clsResults.SUCCESS:
