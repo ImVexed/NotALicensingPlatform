@@ -1,28 +1,26 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
-using System.Text;
 
 namespace NotALicensingPlatform
 {
-    internal class Program
+  internal class Program
+  {
+    private static Client client = new Client("localhost", 1337);
+
+    private static void Main(string[] args)
     {
-        private static Client client = new Client("localhost", 1337);
+      Console.Title = "NaLP Client";
+      client.Start();
 
-        private static void Main(string[] args)
-        {
-            Console.Title = "NaLP Client";
-            client.Start();
+      var vAsm = Assembly.Load(client.GetBase());
+      var vEP = vAsm.EntryPoint;
+      var vSC = vAsm.GetType(vEP.DeclaringType.FullName).GetMethod("SetClient");
+      var vInst = vAsm.CreateInstance(vEP.Name);
+      vSC.Invoke(vInst, new object[] { client }); // Pass our client to the Login GUI first
+      vEP.Invoke(vInst, null);                    // Now properly invoke and draw GUI
 
-            var vAsm = Assembly.Load(client.GetBase());
-            var vEP = vAsm.EntryPoint;
-            var vSC = vAsm.GetType(vEP.DeclaringType.FullName).GetMethod("SetClient");
-            var vInst = vAsm.CreateInstance(vEP.Name);
-            vSC.Invoke(vInst, new object[] { client }); // Pass our client to the Login GUI first
-            vEP.Invoke(vInst, null);                    // Now properly invoke and draw GUI
-
-            Process.GetCurrentProcess().WaitForExit();
-        }
+      Process.GetCurrentProcess().WaitForExit();
     }
+  }
 }
