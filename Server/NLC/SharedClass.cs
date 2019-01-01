@@ -68,7 +68,18 @@ namespace Server.NLC
 
             this.user = user;
 
-            return true;       
+            return true;
+        }
+
+        [NLCCall("Logout")]
+        public bool Logout()
+        {
+            if (this.user == null)
+                return false;
+
+            this.user = null;
+
+            return true;
         }
 
         [NLCCall("ProtectedFunction")]
@@ -77,7 +88,7 @@ namespace Server.NLC
             if (this.user == null)
                 return "Unauthorized!";
             else
-                return "Hello " + this.user.Username;
+                return "You have access to the secret data " + this.user.Username;
         }
 
         public void Dispose()

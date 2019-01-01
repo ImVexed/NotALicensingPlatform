@@ -12,6 +12,9 @@ namespace Client
         public Task<bool> Register(string username, byte[] password, string keyid) =>
             Task.FromResult(client.RemoteCall<bool>("Register", username, password, hwid.Result, keyid));
 
+        public Task<bool> Logout() =>
+            Task.FromResult(client.RemoteCall<bool>("Logout"));
+
         public Task<string> ProtectedFunction() =>
             Task.FromResult(client.RemoteCall<string>("ProtectedFunction"));
 
@@ -23,7 +26,7 @@ namespace Client
         {
             var socket = new NLCSocket(true, true);
 
-            Task.Run(FingerPrint.Get).ContinueWith(x => hwid = x);
+            hwid = Task.Run(FingerPrint.Get);
 
             client = new NotLiteCode.Client(socket, true);
 
