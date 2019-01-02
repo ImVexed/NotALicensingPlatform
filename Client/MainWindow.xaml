@@ -5,19 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" ResizeMode="NoResize">
+        Title="MainWindow" Height="450" Width="800" MinWidth="400" MinHeight="500" ResizeMode="CanMinimize">
     <Grid>
-        <TabControl Margin="0,30,0,0">
+        <TabControl Margin="0,0,0,30">
             <TabItem Header="Register">
                 <Grid Background="Transparent">
                     <Button x:Name="ButtonRegister" Content="Register" HorizontalAlignment="Center" Margin="0,160,0,0" VerticalAlignment="Center" Width="75" Click="ButtonRegister_ClickAsync"/>
                     <TextBox x:Name="TextBoxRegisterUsername" HorizontalAlignment="Center" Height="23" Margin="0,0,0,180" TextWrapping="Wrap" VerticalAlignment="Center" Width="120"/>
                     <TextBox x:Name="TextBoxRegisterPassword" HorizontalAlignment="Center" Height="23" Margin="0,0,0,60" TextWrapping="Wrap" VerticalAlignment="Center" Width="120"/>
                     <TextBox x:Name="TextBoxKey" HorizontalAlignment="Center" Height="23" Margin="0,60,0,0" TextWrapping="Wrap" VerticalAlignment="Center" Width="120"/>
-                    <Label Content="Username" HorizontalAlignment="Left" Margin="334,49,0,0" VerticalAlignment="Top"/>
-                    <Label Content="Password" HorizontalAlignment="Left" Margin="334,109,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.351,0.221"/>
-                    <Label Content="Key" HorizontalAlignment="Left" Margin="334,169,0,0" VerticalAlignment="Top" RenderTransformOrigin="-1.31,1.608"/>
-                    <Label x:Name="LabelPostRegister" Content="" HorizontalAlignment="Center" Margin="0,0,0,20" VerticalAlignment="Bottom"/>
+                    <Label Content="Username" HorizontalAlignment="Center" Margin="0,0,0,240" VerticalAlignment="Center"/>
+                    <Label Content="Password" HorizontalAlignment="Center" Margin="0,0,0,120" VerticalAlignment="Center"/>
+                    <Label Content="Key" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center"/>
+                    <Label x:Name="LabelPostRegister" Content="" HorizontalAlignment="Center" Margin="0,0,0,60" VerticalAlignment="Bottom"/>
 
                 </Grid>
             </TabItem>
@@ -25,16 +25,17 @@
                 <Grid Background="Transparent">
                     <TextBox x:Name="TextBoxLoginUsername" HorizontalAlignment="Center" Height="23" Margin="0,0,0,180" TextWrapping="Wrap" VerticalAlignment="Center" Width="120"/>
                     <TextBox x:Name="TextBoxLoginPassword" HorizontalAlignment="Center" Height="23" Margin="0,0,0,60" TextWrapping="Wrap" VerticalAlignment="Center" Width="120"/>
-                    <Label Content="Username" HorizontalAlignment="Left" Margin="334,49,0,0" VerticalAlignment="Top"/>
-                    <Label Content="Password" HorizontalAlignment="Left" Margin="334,109,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.351,0.221"/>
-                    <Button Content="Login" HorizontalAlignment="Center" Margin="0,80,0,0" VerticalAlignment="Center" Width="75" Click="ButtonLogin_ClickAsync"/>
-                    <Label x:Name="LabelPostAuth" Content="" HorizontalAlignment="Center" Margin="0,10,0,0" VerticalAlignment="Center"/>
+                    <Label Content="Username" HorizontalAlignment="Center" Margin="0,0,0,240" VerticalAlignment="Center"/>
+                    <Label Content="Password" HorizontalAlignment="Center" Margin="0,0,0,120" VerticalAlignment="Center" RenderTransformOrigin="0.351,0.221"/>
+                    <Button Content="Login" HorizontalAlignment="Center" Margin="0,20,0,0" VerticalAlignment="Center" Width="75" Click="ButtonLogin_ClickAsync"/>
+                    <Label x:Name="LabelPostAuth" Content="" HorizontalAlignment="Center" Margin="0,100,0,0" VerticalAlignment="Center"/>
                 </Grid>
             </TabItem>
         </TabControl>
-        <Button x:Name="ButtonGetSecretData" Content="Get Secret Data" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Click="ButtonGetSecretData_ClickAsync"/>
-        <Label x:Name="LabelSecretData" Content="" HorizontalAlignment="Left" Margin="110,0,0,0" VerticalAlignment="Top" BorderBrush="Black"/>
-        <Button x:Name="ButtonLogout" Content="Logout" HorizontalAlignment="Right" Margin="0,5,10,0" VerticalAlignment="Top" Click="ButtonLogout_ClickAsync" Visibility="Hidden"/>
+        <Button x:Name="ButtonGetSecretData" Content="Get Secret Data" HorizontalAlignment="Left" Margin="10,0,0,5" VerticalAlignment="Bottom" Click="ButtonGetSecretData_ClickAsync"/>
+        <Label x:Name="LabelSecretData" Content="" HorizontalAlignment="Left" Margin="100,0,0,5" VerticalAlignment="Bottom" BorderBrush="Black"/>
+        <Button x:Name="ButtonLogout" Content="Logout" HorizontalAlignment="Right" Margin="0,0,10,5" VerticalAlignment="Bottom" Click="ButtonLogout_ClickAsync" Visibility="Hidden"/>
         <Label x:Name="LabelLoggedIn" Content="" HorizontalAlignment="Right" Margin="0,0,200,0" VerticalAlignment="Top"/>
+        <Label x:Name="LabelHint" Content="Try looking at the secret data" HorizontalAlignment="Left" Margin="1,0,0,30" VerticalAlignment="Bottom" Visibility="Hidden"/>
     </Grid>
 </Window>
