@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using System.Windows;
-using System.Threading.Tasks;
 
 namespace Client
 {
@@ -25,6 +24,7 @@ namespace Client
                 LabelPostAuth.Content = $"Welcome back, {TextBoxLoginUsername.Text}";
                 LabelLoggedIn.Content = $"Logged in as, {TextBoxLoginUsername.Text}";
                 ButtonLogout.Visibility = Visibility.Visible;
+                LabelHint.Visibility = Visibility.Visible;
             }
             else
             {
@@ -41,6 +41,9 @@ namespace Client
             if (await c.Register(username, password, key))
             {
                 LabelPostRegister.Content = $"Thank you for registering {TextBoxRegisterUsername.Text}";
+                LabelLoggedIn.Content = $"Logged in as, {TextBoxRegisterUsername.Text}";
+                ButtonLogout.Visibility = Visibility.Visible;
+                LabelHint.Visibility = Visibility.Visible;
             }
             else
             {
@@ -59,6 +62,10 @@ namespace Client
             {
                 LabelLoggedIn.Content = string.Empty;
                 ButtonLogout.Visibility = Visibility.Hidden;
+                LabelHint.Visibility = Visibility.Hidden;
+                LabelSecretData.Content = string.Empty;
+                LabelPostAuth.Content = string.Empty;
+                LabelPostRegister.Content = string.Empty;
             }
         }
     }
