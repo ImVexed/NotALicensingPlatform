@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 namespace Server.Misc
 {
-    class Helpers
+    internal class Helpers
     {
         public static X509Certificate2 GenerateSelfSignedCert(string CertificateName, string HostName)
         {
@@ -29,6 +27,42 @@ namespace Server.Misc
 
                 return new X509Certificate2(certificate.Export(X509ContentType.Pfx));
             }
+        }
+
+        private static readonly object LogLock = new object();
+
+        public static void Log(string message, ConsoleColor color)
+        {
+            lock (LogLock)
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write("[{0}] ", DateTime.Now.ToLongTimeString());
+                Console.ForegroundColor = color;
+                Console.Write("{0}{1}", message, Environment.NewLine);
+                Console.ResetColor();
+            }
+        }
+
+        public static string ToHumanReadableString(TimeSpan t)
+        {
+            if (t.TotalSeconds <= 1)
+            {
+                return $@"{t:s\.ff} seconds";
+            }
+            if (t.TotalMinutes <= 1)
+            {
+                return $@"{t:%s} seconds";
+            }
+            if (t.TotalHours <= 1)
+            {
+                return $@"{t:%m} minutes";
+            }
+            if (t.TotalDays <= 1)
+            {
+                return $@"{t:%h} hours";
+            }
+
+            return $@"{t:%d} days";
         }
     }
 }
