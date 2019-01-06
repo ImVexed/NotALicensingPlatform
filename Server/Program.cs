@@ -17,6 +17,9 @@ namespace Server
             [Option("emptysqlite", MetaValue = "emptysqlite", HelpText = "Path to empty pre-formatted sqlite3 db to use in case one cannot be found in the data path")]
             public string EmptySQLite { get; set; }
 
+            [Option("mongo", MetaValue = "mongo", HelpText = "MongoDB connection string")]
+            public string Mongo { get; set; }
+
             [Option("genkey", MetaValue = "genkey", HelpText = "Generate a new key for specified duration ex. '5 months' '1 day'")]
             public string GenKey { get; set; }
 
@@ -37,6 +40,13 @@ namespace Server
                            Helpers.Log($"Using SQLite database provider at {o.SQLite}", ConsoleColor.Green);
 
                            provider = new Sqlite(o.SQLite, o.EmptySQLite);
+                       }
+
+                       if(!string.IsNullOrEmpty(o.Mongo))
+                       {
+                           Helpers.Log($"Using Mongo connection string: {o.Mongo}", ConsoleColor.Green);
+
+                           provider = new Mongo(o.Mongo);
                        }
 
                        //TODO: Furure provider support?
@@ -63,7 +73,7 @@ namespace Server
 
                            var duration = dateEnd - DateTime.Now;
 
-                           rp.GenerateKey(duration);                    
+                           rp.GenerateKey(duration);
                        }
                        else
                        {
