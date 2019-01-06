@@ -11,13 +11,13 @@ namespace Server
     {
         class Options
         {
-            [Option("sqlite", MetaValue = "sqlite", HelpText = "Use SQLite DB Provider at specified data path")]
+            [Option("sqlite", MetaValue = "sqlite", HelpText = "Use SQLite provider at specified data path")]
             public string SQLite { get; set; }
 
             [Option("emptysqlite", MetaValue = "emptysqlite", HelpText = "Path to empty pre-formatted sqlite3 db to use in case one cannot be found in the data path")]
             public string EmptySQLite { get; set; }
 
-            [Option("mongo", MetaValue = "mongo", HelpText = "MongoDB connection string")]
+            [Option("mongo", MetaValue = "mongo", HelpText = "Use Mongo provider with specified connection string")]
             public string Mongo { get; set; }
 
             [Option("genkey", MetaValue = "genkey", HelpText = "Generate a new key for specified duration ex. '5 months' '1 day'")]
@@ -44,12 +44,10 @@ namespace Server
 
                        if(!string.IsNullOrEmpty(o.Mongo))
                        {
-                           Helpers.Log($"Using Mongo connection string: {o.Mongo}", ConsoleColor.Green);
+                           Helpers.Log($"Using Mongo with connection string: {o.Mongo}", ConsoleColor.Green);
 
                            provider = new Mongo(o.Mongo);
                        }
-
-                       //TODO: Furure provider support?
 
                        if(provider == default(IDBProvider))
                        {
