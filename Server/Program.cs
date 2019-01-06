@@ -14,6 +14,9 @@ namespace Server
             [Option("sqlite", MetaValue = "sqlite", HelpText = "Use SQLite DB Provider at specified data path")]
             public string SQLite { get; set; }
 
+            [Option("emptysqlite", MetaValue = "emptysqlite", HelpText = "Path to empty pre-formatted sqlite3 db to use in case one cannot be found in the data path")]
+            public string EmptySQLite { get; set; }
+
             [Option("genkey", MetaValue = "genkey", HelpText = "Generate a new key for specified duration ex. '5 months' '1 day'")]
             public string GenKey { get; set; }
 
@@ -33,7 +36,7 @@ namespace Server
                        {
                            Helpers.Log($"Using SQLite database provider at {o.SQLite}", ConsoleColor.Green);
 
-                           provider = new Sqlite(o.SQLite);
+                           provider = new Sqlite(o.SQLite, o.EmptySQLite);
                        }
 
                        //TODO: Furure provider support?

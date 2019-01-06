@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Server.Misc;
 using System;
 using System.IO;
 
@@ -10,9 +11,17 @@ namespace Server.Database
 
         private readonly UserContext db;
 
-        public Sqlite(string DataDirectory)
+        public Sqlite(string DataDirectory, string EmptySQLite)
         {
             Sqlite.DataDirectory = DataDirectory;
+
+            // If no database is found, create a new empty database from when the program was built
+            if (!File.Exists(Path.Join(DataDirectory, "nalp.db")))
+            {
+                Helpers.Log("No prexisting database found, creating new database", ConsoleColor.Yellow);
+
+                File.Copy(EmptySQLite, Path.Join(DataDirectory, "nalp.db"));
+            }
 
             db = new UserContext();
 
