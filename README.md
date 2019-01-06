@@ -4,7 +4,7 @@ A sample C# licensing server & client implementation using [NotLiteCode](https:/
 ## Features
  - Automatic SSL
  - Key based subscription model
- - SQLite support (with Mongo & friends soon to come)
+ - SQLite & Mongo support
  - Docker support
  
  ## Try
