@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -8,7 +9,8 @@ namespace Server.Database
 {
     public class User
     {
-        [Key] public string Username { get; set; }
+        [Key] [BsonId]
+        public string Username { get; set; }
         public byte[] Password { get; set; }
         public byte[] HWID { get; set; }
         public List<Key> Keys { get; set; }
@@ -56,7 +58,8 @@ namespace Server.Database
 
     public class Key
     {
-        [Key] public string Identifier { get; set; }
+        [Key] [BsonId]
+        public string Identifier { get; set; }
         public TimeSpan ValidFor { get; set; }
         public DateTime ActivatedOn { get; set; }
 

@@ -40,7 +40,6 @@ namespace Server.NLC
                 Helpers.Log($"{username} tried to log in without an active subscription", ConsoleColor.Yellow);
                 return false;
             }
-                
 
             this.user = user;
 
@@ -134,7 +133,7 @@ namespace Server.NLC
 
                 return "You have access to the secret data " + this.user.Username;
             }
-                
+
         }
 
         public void Dispose()
