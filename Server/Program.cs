@@ -20,6 +20,9 @@ namespace Server
             [Option("mongo", MetaValue = "mongo", HelpText = "Use Mongo provider with specified connection string")]
             public string Mongo { get; set; }
 
+            [Option("postgresql", MetaValue = "postgresql", HelpText = "Use PostgreSQL provider with specified connection string")]
+            public string PostgreSQL { get; set; }
+
             [Option("genkey", MetaValue = "genkey", HelpText = "Generate a new key for specified duration ex. '5 months' '1 day'")]
             public string GenKey { get; set; }
 
@@ -47,6 +50,13 @@ namespace Server
                            Helpers.Log($"Using Mongo with connection string: {o.Mongo}", ConsoleColor.Green);
 
                            provider = new Mongo(o.Mongo);
+                       }
+
+                       if(!string.IsNullOrEmpty(o.PostgreSQL))
+                       {
+                           Helpers.Log($"Using PostgreSQL with connection string: {o.PostgreSQL}", ConsoleColor.Green);
+
+                           provider = new Postgresql(o.PostgreSQL);
                        }
 
                        if(provider == default(IDBProvider))
