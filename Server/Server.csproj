@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.3.0" />
+    <PackageReference Include="HumanDateParser" Version="1.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.0" />
+    <PackageReference Include="NotLiteCode" Version="1.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="NotLiteCode">
+      <HintPath>..\..\NotLiteCode\NotLiteCode\bin\Debug\net452\NotLiteCode.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
