@@ -12,7 +12,6 @@ RUN mv Output/Server Output/nalp
 FROM microsoft/dotnet:2.1-runtime
 COPY --from=build /app/Output /usr/bin
 COPY --from=build /app/data/nalp.db .
-ENTRYPOINT [ "nalp", "--emptysqlite", "nalp.db" ]
-CMD ["--sqlite", "/data"]
+ENTRYPOINT [ "nalp", "--emptysqlite", "nalp.db", "--sqlite", "/data"]
 VOLUME /data
 EXPOSE 1337
