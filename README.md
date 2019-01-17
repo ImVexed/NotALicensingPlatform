@@ -14,7 +14,7 @@ A sample C# licensing server & client implementation using [NotLiteCode](https:/
  cd NotALicensingPlatform/Server/
  docker build -t nalp .
  docker run -d -p 1337:1337 --name nalp nalp
- docker exec nalp nalp --genkey "6 months"
+ docker exec nalp nalp --sqlite /data --genkey "6 months"
  ```
  
  Start the Client and use the key outputted from the `docker exec` to register an account.
