@@ -12,15 +12,13 @@ namespace Server.Database
         [Key] [BsonId]
         public string Username { get; set; }
         public byte[] Password { get; set; }
-        public byte[] HWID { get; set; }
         public List<Key> Keys { get; set; }
         public bool Banned { get; set; }
 
-        public User(string Username, byte[] Password, byte[] HWID)
+        public User(string Username, byte[] Password)
         {
             this.Username = Username;
             this.Password = Password;
-            this.HWID = HWID;
             this.Keys = new List<Key>();
             this.Banned = false;
         }
@@ -36,11 +34,6 @@ namespace Server.Database
 
                 return hash.SequenceEqual(this.Password);
             }
-        }
-
-        public bool CheckHWID(byte[] hwid)
-        {
-            return hwid.SequenceEqual(this.HWID);
         }
 
         public void AddKey(Key key)

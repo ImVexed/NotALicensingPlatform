@@ -12,7 +12,7 @@ namespace Server.NLC
         User user;
 
         [NLCCall("Login")]
-        public bool Login(string username, byte[] password, byte[] hwid)
+        public bool Login(string username, byte[] password)
         {
             // Ensure a user isn't already logged in
             if (this.user != null)
@@ -26,12 +26,6 @@ namespace Server.NLC
             if (!user.CheckPassword(password))
             {
                 Helpers.Log($"{username} tried to log in with an invalid password", ConsoleColor.Yellow);
-                return false;
-            }
-
-            if(!user.CheckHWID(hwid))
-            {
-                Helpers.Log($"{username} tried to log in from a different computer", ConsoleColor.Yellow);
                 return false;
             }
 
@@ -49,7 +43,7 @@ namespace Server.NLC
         }
 
         [NLCCall("Register")]
-        public bool Register(string username, byte[] password, byte[] hwid, string keyid)
+        public bool Register(string username, byte[] password, string keyid)
         {
             // Ensure a user isn't already logged in
             if (this.user != null)
@@ -76,7 +70,7 @@ namespace Server.NLC
                 return false;
             }
 
-            var user = new User(username, password, hwid);
+            var user = new User(username, password);
 
             using (var sha = SHA256.Create())
             {

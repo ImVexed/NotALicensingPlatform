@@ -6,12 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.3.0" />
+    <PackageReference Include="CommandLineParser" Version="2.4.3" />
     <PackageReference Include="HumanDateParser" Version="1.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.1" />
     <PackageReference Include="MongoDB.Driver" Version="2.7.2" />
-    <PackageReference Include="NotLiteCode" Version="1.2.2" />
+    <PackageReference Include="NotLiteCode" Version="1.4.1" />
   </ItemGroup>
 
   <ItemGroup>
